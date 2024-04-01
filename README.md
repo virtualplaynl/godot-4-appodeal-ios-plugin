@@ -1,15 +1,16 @@
-# Appodeal iOS Plugin for Godot GameEngine
+# (Work In Progress!) Appodeal iOS Plugin for Godot 4
+For Godot 3 version see the [original repository](https://github.com/DmitriiFeshchenko/godot-appodeal-ios-plugin)
 
 This repository contains source code of Appodeal **iOS** Plugin for Godot engine.
 **If you are looking for the Appodeal plugin itself, follow the first link below.**
 
 ## Links:
 
-### [Godot Plugin](https://github.com/DmitriiFeshchenko/godot-appodeal-editor-plugin)
+### [Godot Plugin](https://github.com/virtualplaynl/godot-4-appodeal-editor-plugin)
 
-### [Demo Project](https://github.com/DmitriiFeshchenko/godot-appodeal-demo-project)
+### [Demo Project](https://github.com/virtualplaynl/godot-4-appodeal-demo-project)
 
-### [Android Plugin](https://github.com/DmitriiFeshchenko/godot-appodeal-android-plugin)
+### [Android Plugin](https://github.com/virtualplaynl/godot-4-appodeal-android-plugin)
 
 ### [Changelog](CHANGELOG.md)
 
