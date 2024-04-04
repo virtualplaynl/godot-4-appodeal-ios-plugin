@@ -3,13 +3,9 @@ import os
 import sys
 import subprocess
 
-if sys.version_info < (3,):
-    def decode_utf8(x):
-        return x
-else:
-    import codecs
-    def decode_utf8(x):
-        return codecs.utf_8_decode(x)[0]
+import codecs
+def decode_utf8(x):
+    return codecs.utf_8_decode(x)[0]
 
 # Most of the settings are taken from https://github.com/BastiaanOlij/gdnative_cpp_example
 
@@ -25,7 +21,6 @@ opts.Add(BoolVariable('simulator', "Compilation platform", 'no'))
 opts.Add(BoolVariable('use_llvm', "Use the LLVM / Clang compiler", 'no'))
 opts.Add(PathVariable('target_path', 'The path where the lib is installed.', 'bin/'))
 opts.Add(EnumVariable('plugin', 'Plugin to build', '', ['', 'appodeal']))
-opts.Add(EnumVariable('version', 'Godot version to target', '', ['', '3.x', '4.0']))
 
 # Updates the environment with the option variables.
 opts.Update(env)
@@ -35,16 +30,8 @@ if env['use_llvm']:
     env['CC'] = 'clang'
     env['CXX'] = 'clang++'
 
-if env['arch'] == '':
-    print("No valid arch selected.")
-    quit();
-
 if env['plugin'] == '':
     print("No valid plugin selected.")
-    quit();
-
-if env['version'] == '':
-    print("No valid Godot version selected.")
     quit();
 
 # For the reference:
@@ -73,19 +60,23 @@ except (subprocess.CalledProcessError, OSError):
     raise ValueError("Failed to find SDK path while running xcrun --sdk {} --show-sdk-path.".format(sdk_name))
 
 env.Append(CCFLAGS=[
-    '-fobjc-arc', 
-    '-fmessage-length=0', '-fno-strict-aliasing', '-fdiagnostics-print-source-range-info', 
-    '-fdiagnostics-show-category=id', '-fdiagnostics-parseable-fixits', '-fpascal-strings', 
-    '-fblocks', '-fvisibility=hidden', '-MMD', '-MT', 'dependencies', '-fno-exceptions', 
-    '-Wno-ambiguous-macro', 
+    '-fobjc-arc',
+    '-fmessage-length=0', '-fno-strict-aliasing', '-fdiagnostics-print-source-range-info',
+    '-fdiagnostics-show-category=id', '-fdiagnostics-parseable-fixits', '-fpascal-strings',
+    '-fblocks', '-fvisibility=hidden', '-MMD', '-MT', 'dependencies', '-fno-exceptions',
+    '-Wno-ambiguous-macro',
     '-Wall', '-Werror=return-type',
     # '-Wextra',
 ])
 
-env.Append(CCFLAGS=['-arch', env['arch'], "-isysroot", "$IOS_SDK_PATH", "-stdlib=libc++", '-isysroot', sdk_path])
+if env['arch'] != '':
+    env.Append(CCFLAGS=['-arch', env['arch']])
+
+env.Append(CCFLAGS=["-isysroot",
+           "$IOS_SDK_PATH", "-stdlib=libc++", '-isysroot', sdk_path])
 env.Append(CCFLAGS=['-DPTRCALL_ENABLED'])
 env.Prepend(CXXFLAGS=[
-    '-DNEED_LONG_INT', '-DLIBYUV_DISABLE_NEON', 
+    '-DNEED_LONG_INT', '-DLIBYUV_DISABLE_NEON',
     '-DIOS_ENABLED', '-DUNIX_ENABLED', '-DCOREAUDIO_ENABLED'
 ])
 env.Append(LINKFLAGS=["-arch", env['arch'], '-isysroot', sdk_path, '-F' + sdk_path])
@@ -93,77 +84,38 @@ env.Append(LINKFLAGS=["-arch", env['arch'], '-isysroot', sdk_path, '-F' + sdk_pa
 if env['arch'] == 'armv7':
     env.Prepend(CXXFLAGS=['-fno-aligned-allocation'])
 
-if env['version'] == '3.x':
-    env.Prepend(CFLAGS=['-std=gnu11'])
-    env.Prepend(CXXFLAGS=['-DGLES_ENABLED', '-std=gnu++14'])
+env.Prepend(CFLAGS=['-std=gnu11'])
+env.Prepend(CXXFLAGS=['-DVULKAN_ENABLED', '-std=gnu++17'])
 
-    if env['target'] == 'debug':
-        env.Prepend(CXXFLAGS=[
-            '-gdwarf-2', '-O0', 
-            '-DDEBUG_MEMORY_ALLOC', '-DDISABLE_FORCED_INLINE', 
-            '-D_DEBUG', '-DDEBUG=1', '-DDEBUG_ENABLED',
-            '-DPTRCALL_ENABLED',
-        ])
-    elif env['target'] == 'release_debug':
-        env.Prepend(CXXFLAGS=['-O2', '-ftree-vectorize',
-            '-DNDEBUG', '-DNS_BLOCK_ASSERTIONS=1', '-DDEBUG_ENABLED', 
-            '-DPTRCALL_ENABLED',
-        ])
+if env['target'] == 'debug':
+    env.Prepend(CXXFLAGS=[
+        '-gdwarf-2', '-O0',
+        '-DDEBUG_MEMORY_ALLOC', '-DDISABLE_FORCED_INLINE',
+        '-D_DEBUG', '-DDEBUG=1', '-DDEBUG_ENABLED',
+    ])
+elif env['target'] == 'release_debug':
+    env.Prepend(CXXFLAGS=[
+        '-O2', '-ftree-vectorize',
+        '-DNDEBUG', '-DNS_BLOCK_ASSERTIONS=1', '-DDEBUG_ENABLED',
+    ])
 
-        if env['arch'] != 'armv7':
-            env.Prepend(CXXFLAGS=['-fomit-frame-pointer'])
-    else:
-        env.Prepend(CXXFLAGS=[
-            '-O2', '-ftree-vectorize',
-            '-DNDEBUG', '-DNS_BLOCK_ASSERTIONS=1', 
-            '-DPTRCALL_ENABLED',
-        ])
-
-        if env['arch'] != 'armv7':
-            env.Prepend(CXXFLAGS=['-fomit-frame-pointer'])
-elif env['version'] == '4.0':
-    env.Prepend(CFLAGS=['-std=gnu11'])
-    env.Prepend(CXXFLAGS=['-DVULKAN_ENABLED', '-std=gnu++17'])
-
-    if env['target'] == 'debug':
-        env.Prepend(CXXFLAGS=[
-            '-gdwarf-2', '-O0', 
-            '-DDEBUG_MEMORY_ALLOC', '-DDISABLE_FORCED_INLINE', 
-            '-D_DEBUG', '-DDEBUG=1', '-DDEBUG_ENABLED', 
-        ])
-    elif env['target'] == 'release_debug':
-        env.Prepend(CXXFLAGS=[
-            '-O2', '-ftree-vectorize',
-            '-DNDEBUG', '-DNS_BLOCK_ASSERTIONS=1', '-DDEBUG_ENABLED',
-        ])
-
-        if env['arch'] != 'armv7':
-            env.Prepend(CXXFLAGS=['-fomit-frame-pointer'])
-    else:
-        env.Prepend(CXXFLAGS=[
-            '-O2', '-ftree-vectorize',
-            '-DNDEBUG', '-DNS_BLOCK_ASSERTIONS=1',
-        ])
-
-        if env['arch'] != 'armv7':
-            env.Prepend(CXXFLAGS=['-fomit-frame-pointer'])            
+    if env['arch'] != 'armv7':
+        env.Prepend(CXXFLAGS=['-fomit-frame-pointer'])
 else:
-    print("No valid version to set flags for.")
-    quit();
+    env.Prepend(CXXFLAGS=[
+        '-O2', '-ftree-vectorize',
+        '-DNDEBUG', '-DNS_BLOCK_ASSERTIONS=1',
+    ])
+
+    if env['arch'] != 'armv7':
+        env.Prepend(CXXFLAGS=['-fomit-frame-pointer'])
 
 # Adding header files
-if env['version'] == '3.x':
-    env.Append(CPPPATH=[
-        '.', 
-        'headers/godot',
-        'headers/godot/platform/iphone',
-    ])
-else:
-       env.Append(CPPPATH=[
-        '.', 
-        'headers/godot',
-        'headers/godot/platform/ios',
-    ])
+env.Append(CPPPATH=[
+    '.',
+    'headers/godot',
+    'headers/godot/platform/ios',
+])
 
 env.Append(CPPPATH=['headers/appodeal'])
 
@@ -173,7 +125,7 @@ sources.append(Glob(env['plugin'] + '/*.mm'))
 sources.append(Glob(env['plugin'] + '/*.m'))
 
 # lib<plugin>.<arch>-<simulator|ios>.<release|debug|release_debug>.a
-library_platform = env["arch"] + "-" + ("simulator" if env["simulator"] else "ios")
+library_platform = (env["arch"] if env["arch"] != "" else "universal") + "-" + ("simulator" if env["simulator"] else "ios")
 library_name = env['plugin'] + "." + library_platform + "." + env["target"] + ".a"
 library = env.StaticLibrary(target=env['target_path'] + library_name, source=sources)
 

@@ -11,3 +11,6 @@ bin/*/
 *.xcframework
 
 *.dblite
+
+headers/godot/
+headers/appodeal/

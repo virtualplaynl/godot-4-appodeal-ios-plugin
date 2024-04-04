@@ -125,8 +125,6 @@ void AppodealPlugin::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("initialize", "app_key", "ad_types"), &AppodealPlugin::initialize);
     ClassDB::bind_method(D_METHOD("isInitialized", "ad_type"), &AppodealPlugin::isInitialized);
-    ClassDB::bind_method(D_METHOD("updateGDPRUserConsent", "consent"), &AppodealPlugin::updateGDPRUserConsent);
-    ClassDB::bind_method(D_METHOD("updateCCPAUserConsent", "consent"), &AppodealPlugin::updateCCPAUserConsent);
     ClassDB::bind_method(D_METHOD("isAutoCacheEnabled", "ad_type"), &AppodealPlugin::isAutoCacheEnabled);
     ClassDB::bind_method(D_METHOD("cache", "ad_types"), &AppodealPlugin::cache);
     ClassDB::bind_method(D_METHOD("show", "show_style"), &AppodealPlugin::show);
@@ -188,34 +186,6 @@ void AppodealPlugin::initialize(const String &appKey, int adTypes) {
 
 bool AppodealPlugin::isInitialized(int adType) {
     return [Appodeal isInitializedForAdType:_getNativeAdType(adType)];
-}
-
-void AppodealPlugin::updateGDPRUserConsent(int consent) {
-    switch (consent) {
-        case 0:
-            [Appodeal updateUserConsentGDPR:APDGDPRUserConsentPersonalized];
-            break;
-        case 1:
-            [Appodeal updateUserConsentGDPR:APDGDPRUserConsentNonPersonalized];
-            break;
-        case 2:
-        default:
-            [Appodeal updateUserConsentGDPR:APDGDPRUserConsentUnknown];
-    }
-}
-
-void AppodealPlugin::updateCCPAUserConsent(int consent) {
-    switch (consent) {
-        case 0:
-            [Appodeal updateUserConsentCCPA:APDCCPAUserConsentOptIn];
-            break;
-        case 1:
-            [Appodeal updateUserConsentCCPA:APDCCPAUserConsentOptOut];
-            break;
-        case 2:
-        default:
-            [Appodeal updateUserConsentCCPA:APDCCPAUserConsentUnknown];
-    }
 }
 
 bool AppodealPlugin::isAutoCacheEnabled(int adType) {
