@@ -60,8 +60,6 @@ public:
 
     void initialize(const String &appKey, int adTypes);
     bool isInitialized(int adType);
-    void updateGDPRUserConsent(int consent);
-    void updateCCPAUserConsent(int consent);
     bool isAutoCacheEnabled(int adType);
     void cache(int adTypes);
     bool show(int showStyle);
